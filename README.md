@@ -87,6 +87,7 @@ Les tests utilisent SQLite **en mémoire**, sans modifier la base de travail. Il
 - `frontend/src/theme.js` et `style.css` : thème MUI et styles communs.
 - [Conception : MCD/MLD et cas d’utilisation](docs/conception.md).
 - [Document Word : MCD, MLD et diagramme UML des cas d’utilisation](docs/Conception_Groupe_1_MCD_MLD_Cas_Utilisation.docx), avec dictionnaire des données, cardinalités et règles de gestion. Les diagrammes PNG/SVG sont dans `docs/diagrammes`.
+- [Présentation PowerPoint de soutenance](docs/Soutenance_Groupe_1_Gestion_Etudiants.pptx) : 16 diapositives avec notes du présentateur et les trois diagrammes. [Guide de présentation](docs/Guide_Soutenance_Groupe_1.md), pour environ 13 minutes d’exposé. Compléter les membres du groupe sur la première diapositive.
 - [Documentation des routes et règles](docs/api.md).
 - [Collection Postman importable](docs/campus.postman_collection.json).
 
