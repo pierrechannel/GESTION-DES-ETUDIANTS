@@ -12,7 +12,7 @@ Application du sujet « Système de gestion des étudiants » du PDF fourni. Bac
 - Notes sur 20, poids des évaluations et coefficients des matières ; calcul des moyennes côté serveur.
 - Relevé imprimable : ouvrir l’icône œil d’un étudiant, puis « Imprimer / Enregistrer en PDF ».
 - Export CSV de tous les étudiants correspondant aux filtres, y compris au-delà de la page affichée.
-- Tableau de bord, statistiques par classe et inscriptions récentes.
+- Tableau de bord avec courbe des inscriptions sur six mois, camemberts par filière et par statut, statistiques par classe et inscriptions récentes. Les graphiques utilisent les données réelles, avec infobulles et légendes accessibles au clavier.
 
 ## Démarrer sur ce poste
 

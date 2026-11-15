@@ -14,6 +14,31 @@ class SchoolApiTest extends TestCase {
         return [$p, $c, $s, $m];
     }
     private function admin(): void { Sanctum::actingAs(User::factory()->create(['role' => 'admin'])); }
+    public function test_dashboard_monthly_counts_include_empty_months_and_local_boundaries(): void {
+        $this->travelTo(\Carbon\CarbonImmutable::parse('2026-11-15 10:00:00', 'UTC'));
+        [$p, $c, $s] = $this->school();
+        foreach (['OLD' => '2026-05-31 21:59:59', 'BOUNDARY' => '2026-05-31 22:00:00', 'FUTURE' => '2026-11-16 00:00:00'] as $number => $date) {
+            $copy = $s->replicate();
+            $copy->registration_number = $number;
+            $copy->created_at = $date;
+            $copy->save();
+        }
+        $this->admin();
+        $this->getJson('/api/v1/dashboard')->assertOk()->assertJsonPath('students', 4)
+            ->assertJsonPath('registrations_by_month', [
+                ['month' => '2026-06', 'count' => 1], ['month' => '2026-07', 'count' => 0],
+                ['month' => '2026-08', 'count' => 0], ['month' => '2026-09', 'count' => 0],
+                ['month' => '2026-10', 'count' => 0], ['month' => '2026-11', 'count' => 1],
+            ]);
+        $this->travelBack();
+    }
+    public function test_empty_dashboard_provides_zero_counts_for_charts(): void {
+        $this->admin();
+        $response = $this->getJson('/api/v1/dashboard')->assertOk()
+            ->assertJsonPath('students', 0)->assertJsonPath('active_students', 0)
+            ->assertJsonCount(6, 'registrations_by_month')->assertJsonCount(0, 'by_class');
+        $this->assertSame([0, 0, 0, 0, 0, 0], array_column($response->json('registrations_by_month'), 'count'));
+    }
     public function test_guests_cannot_access_school_records(): void {
         $this->getJson('/api/v1/students')->assertUnauthorized();
     }

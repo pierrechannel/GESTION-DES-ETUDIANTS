@@ -19,6 +19,8 @@ Base : `http://127.0.0.1:8000/api/v1`. Envoyer `Accept: application/json`, `Cont
 
 Entités : `students`, `programs`, `classes`, `subjects`, `grades`.
 
+Le tableau de bord retourne aussi `registrations_by_month` : six objets `{ "month": "2026-11", "count": 12 }`, du mois le plus ancien au mois courant. Les mois sans inscription ont un compteur à zéro. Les inscriptions sont regroupées selon leur date de création, dans le fuseau `Africa/Bujumbura` ; le mois courant est arrêté à la date de la requête. Les camemberts utilisent les effectifs par classe regroupés par filière et les totaux actif/inactif.
+
 ## Corps des requêtes
 
 - programs : `name`, `code`, `description` (facultatif).

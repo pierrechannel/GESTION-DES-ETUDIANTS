@@ -3,3 +3,39 @@
 @media(max-width:1150px){.sidebar{width:210px;padding-inline:14px}.workspace{margin-left:210px;width:calc(100% - 210px)}.main-content{padding:28px 24px 0}.topbar{padding:0 24px}.page-heading{align-items:flex-start;flex-direction:column}.list-toolbar{align-items:flex-start;flex-direction:column}.filters{width:100%}.banner-icon{margin:0;font-size:140px!important}.welcome-banner{padding:25px}.dashboard-grid{grid-template-columns:1fr}.stat-card{padding:15px}.login-story{padding:40px}}
 @media(max-width:760px){.sidebar{transform:translateX(-100%);transition:transform .2s}.sidebar.visible{transform:translateX(0)}.scrim{display:block;position:fixed;inset:0;background:#0005;z-index:1050}.workspace{margin:0;width:100%}.mobile-toggle{display:inline-flex!important}.main-content{padding:24px 16px 0}.topbar{padding:0 16px;height:70px}.breadcrumb{gap:8px;font-size:10px}.profile>div:first-child{display:none}.page-heading h1{font-size:27px}.heading-actions{width:100%}.stats-grid{grid-template-columns:repeat(2,1fr);gap:12px}.welcome-banner h2{font-size:23px}.banner-icon{display:none!important}.filters{flex-direction:column}.list-toolbar{padding:18px}.entity-panel .MuiTableCell-root{padding:12px}.MuiTablePagination-toolbar{padding:0!important}.MuiTablePagination-selectLabel{display:none}footer span{display:none}.login-layout{grid-template-columns:1fr}.login-story{padding:26px}.login-story>div:nth-child(2),.login-story>small{display:none}.login-form{padding:40px 24px}.transcript{padding:0}.transcript-heading .brand{font-size:22px}}
 @media print{body{background:white!important}.app-shell,.no-print{display:none!important}.MuiDialog-root{position:absolute!important;inset:0!important}.MuiBackdrop-root{display:none!important}.MuiDialog-container{height:auto!important;display:block!important}.MuiDialog-paper{margin:0!important;width:100%!important;max-width:none!important;max-height:none!important;box-shadow:none!important;overflow:visible!important;border-radius:0!important}.MuiDialogContent-root{overflow:visible!important;padding:20px!important}.transcript{color:black}.transcript .muted{color:#555!important}.transcript tr{break-inside:avoid}.transcript-heading{border-color:#333}.average{border:1px solid #ccc}.MuiDialog-paper{position:static!important}@page{size:A4;margin:15mm}}
+
+/* Dashboard charts share the existing campus palette and remain readable on mobile. */
+.dashboard-charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;margin-bottom:24px}
+.dashboard-charts>.panel{min-width:0}
+.registration-panel{grid-column:1/-1}
+.line-chart-body{padding:24px}
+.chart-summary{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.chart-summary>strong{font-size:24px;font-weight:600}
+.chart-summary>strong>span{font-size:11px;font-weight:400;color:#728075;margin-left:6px}
+.chart-key{display:flex;align-items:center;gap:8px;font-size:11px;color:#728075}
+.chart-key i{width:18px;height:3px;background:#215749;border-radius:3px}
+.line-chart{display:block;width:100%;max-height:300px;overflow:visible}
+.chart-gridline{stroke:#e7ede9;stroke-dasharray:4 4}
+.chart-axis{fill:#728075;font-size:11px;font-family:inherit}
+.chart-point,.pie-slice{cursor:help;outline:none}
+.chart-point:focus-visible{stroke:#c58b30;stroke-width:5}
+.pie-slice{transition:opacity .15s}
+.pie-slice:focus-visible{stroke:#263831;stroke-width:4}
+.chart-detail{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:#728075;margin:12px 0 0;text-transform:capitalize}
+.chart-detail strong{color:#215749;font-weight:600;text-transform:none}
+.chart-empty{text-align:center;color:#859089;font-size:12px;padding:30px 20px;line-height:1.7}
+.pie-layout{display:grid;grid-template-columns:minmax(140px,210px) minmax(0,1fr);align-items:center;gap:12px;padding:22px}
+.pie-chart{display:block;width:100%;max-width:220px;margin:auto}
+.chart-legend{list-style:none;margin:0;padding:0;max-height:230px;overflow:auto}
+.chart-legend li+li{border-top:1px solid #edf0ed}
+.chart-legend button{display:flex;align-items:center;gap:9px;width:100%;padding:11px 6px;border:0;background:transparent;text-align:left;border-radius:6px;color:#53665a;cursor:pointer;font-size:11px}
+.chart-legend button:hover,.chart-legend button[aria-pressed=true]{background:#f0f5f1}
+.chart-legend button:focus-visible{outline:2px solid #215749;outline-offset:-2px}
+.chart-legend i{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.chart-legend button>span{flex:1;overflow-wrap:anywhere;min-width:0}
+.chart-legend strong{text-align:right;font-size:13px;font-weight:600;white-space:nowrap}
+.chart-legend small{display:block;font-size:10px;color:#859089;font-weight:400;margin-top:3px}
+.pie-total{grid-column:1/-1;text-align:center;color:#859089;font-size:11px;margin:0}
+@media(max-width:1150px){.dashboard-charts{grid-template-columns:1fr}.pie-layout{grid-template-columns:minmax(140px,210px) minmax(0,1fr)}}
+@media(max-width:760px){.dashboard-charts{gap:16px}.line-chart-body{padding:18px 14px}.dashboard-charts .panel-heading{padding:18px;gap:10px;flex-wrap:wrap}.pie-layout{padding:16px;grid-template-columns:minmax(120px,170px) minmax(0,1fr);gap:6px}.chart-summary>strong{font-size:21px}.chart-summary>strong>span{font-size:10px}.chart-detail{font-size:10px}}
+@media(max-width:380px){.pie-layout{grid-template-columns:1fr}.pie-chart{max-width:160px}.chart-legend{width:100%}}
