@@ -1,5 +1,5 @@
 """Create a 16:9 PowerPoint with editable text/shapes and speaker notes.
-Only the Python standard library is required. Existing project diagrams are embedded.
+Requires python-pptx (install into .tools/pptx). Existing project diagrams are embedded.
 """
 from pathlib import Path
 from xml.sax.saxutils import escape
@@ -8,6 +8,9 @@ from datetime import datetime, timezone
 import struct
 import xml.etree.ElementTree as ET
 import posixpath
+import sys
+import io
+import shutil
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / 'docs'
@@ -193,61 +196,139 @@ s.text(.75,3.85,11.4,1.5,'Une conception relationnelle expliquée\nUne API Larav
 s.text(.75,5.65,11.8,1.1,'Merci pour votre attention.\nQuestions et échanges',27,GOLD,True)
 
 
-def relationships(entries):
-    return '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+''.join(f'<Relationship Id="{e(rid)}" Type="{BASE+kind}" Target="{e(target)}"/>' for rid,kind,target in entries)+'</Relationships>'
+# Build the actual package with python-pptx's standard Office template. The
+# slide descriptions above are converted to native shapes, not injected XML.
+sys.path.insert(0, str(ROOT / '.tools' / 'pptx'))
+try:
+    from pptx import Presentation
+    from pptx.util import Pt
+    from pptx.dml.color import RGBColor
+    from pptx.enum.shapes import MSO_SHAPE, MSO_CONNECTOR
+    from pptx.enum.text import PP_ALIGN, MSO_ANCHOR, MSO_AUTO_SIZE
+    from pptx.oxml.xmlchemy import OxmlElement
+except ImportError as error:
+    raise SystemExit('Install python-pptx with: python -m pip install --target .tools/pptx python-pptx') from error
 
-clrmap='<p:clrMap accent1="accent1" accent2="accent2" accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" bg1="lt1" bg2="lt2" folHlink="folHlink" hlink="hlink" tx1="dk1" tx2="dk2"/>'
-parts={}
-parts['_rels/.rels']=relationships([('rId1','officeDocument','ppt/presentation.xml')])
-parts['ppt/presentation.xml']=f'<p:presentation {NS}><p:sldMasterIdLst><p:sldMasterId id="2147483648" r:id="rIdMaster"/></p:sldMasterIdLst><p:notesMasterIdLst><p:notesMasterId r:id="rIdNotesMaster"/></p:notesMasterIdLst><p:sldIdLst>'+''.join(f'<p:sldId id="{255+s.index}" r:id="rIdSlide{s.index}"/>' for s in slides)+f'</p:sldIdLst><p:sldSz cx="{n(W)}" cy="{n(H)}" type="screen16x9"/><p:notesSz cx="6858000" cy="9144000"/><p:defaultTextStyle><a:defPPr><a:defRPr lang="fr-FR"/></a:defPPr></p:defaultTextStyle></p:presentation>'
-parts['ppt/_rels/presentation.xml.rels']=relationships([('rIdMaster','slideMaster','slideMasters/slideMaster1.xml'),('rIdNotesMaster','notesMaster','notesMasters/notesMaster1.xml')]+[(f'rIdSlide{s.index}','slide',f'slides/slide{s.index}.xml') for s in slides])
-parts['ppt/slideMasters/slideMaster1.xml']=f'<p:sldMaster {NS}><p:cSld name="Campus"><p:spTree>{group()}</p:spTree></p:cSld>{clrmap}<p:sldLayoutIdLst><p:sldLayoutId id="2147483649" r:id="rIdLayout"/></p:sldLayoutIdLst><p:txStyles><p:titleStyle/><p:bodyStyle/><p:otherStyle/></p:txStyles></p:sldMaster>'
-parts['ppt/slideMasters/_rels/slideMaster1.xml.rels']=relationships([('rIdLayout','slideLayout','../slideLayouts/slideLayout1.xml'),('rIdTheme','theme','../theme/theme1.xml')])
-parts['ppt/slideLayouts/slideLayout1.xml']=f'<p:sldLayout {NS} type="blank" preserve="1"><p:cSld name="Vide"><p:spTree>{group()}</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sldLayout>'
-parts['ppt/slideLayouts/_rels/slideLayout1.xml.rels']=relationships([('rIdMaster','slideMaster','../slideMasters/slideMaster1.xml')])
-parts['ppt/notesMasters/notesMaster1.xml']=f'<p:notesMaster {NS}><p:cSld name="Notes"><p:spTree>{group()}</p:spTree></p:cSld>{clrmap}<p:notesStyle><a:lvl1pPr><a:defRPr sz="1200"/></a:lvl1pPr></p:notesStyle></p:notesMaster>'
-parts['ppt/notesMasters/_rels/notesMaster1.xml.rels']=relationships([('rIdTheme','theme','../theme/theme1.xml')])
-colors={'dk1':INK,'lt1':WHITE,'dk2':DARK,'lt2':LIGHT,'accent1':GREEN,'accent2':'699C82','accent3':GOLD,'accent4':'7895B1','accent5':'A183AD','accent6':'C57E6C','hlink':'0563C1','folHlink':'954F72'}
-clr=''.join(f'<a:{name}><a:srgbClr val="{color}"/></a:{name}>' for name,color in colors.items())
-solid='<a:solidFill><a:schemeClr val="phClr"/></a:solidFill>'
-parts['ppt/theme/theme1.xml']='<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="Campus"><a:themeElements><a:clrScheme name="Campus">'+clr+'</a:clrScheme><a:fontScheme name="Arial"><a:majorFont><a:latin typeface="Arial"/><a:ea typeface=""/><a:cs typeface=""/></a:majorFont><a:minorFont><a:latin typeface="Arial"/><a:ea typeface=""/><a:cs typeface=""/></a:minorFont></a:fontScheme><a:fmtScheme name="Campus"><a:fillStyleLst>'+solid*3+'</a:fillStyleLst><a:lnStyleLst>'+''.join(f'<a:ln w="{w}">{solid}<a:prstDash val="solid"/></a:ln>' for w in [9525,25400,38100])+'</a:lnStyleLst><a:effectStyleLst>'+('<a:effectStyle><a:effectLst/></a:effectStyle>'*3)+'</a:effectStyleLst><a:bgFillStyleLst>'+solid*3+'</a:bgFillStyleLst></a:fmtScheme></a:themeElements><a:objectDefaults/><a:extraClrSchemeLst/></a:theme>'
-for s in slides:
-    i=s.index
-    parts[f'ppt/slides/slide{i}.xml']=s.xml()
-    parts[f'ppt/slides/_rels/slide{i}.xml.rels']=relationships([('rIdLayout','slideLayout','../slideLayouts/slideLayout1.xml'),('rIdNotes','notesSlide',f'../notesSlides/notesSlide{i}.xml')]+s.relationships)
-    note_paragraphs=''.join('<a:p><a:r><a:rPr lang="fr-FR" sz="1200"/><a:t>'+e(line)+'</a:t></a:r></a:p>' for line in [s.title,s.notes,'Sources : README.md, docs/conception.md, migrations, modèles, routes et code du projet.'])
-    parts[f'ppt/notesSlides/notesSlide{i}.xml']=f'<p:notes {NS}><p:cSld><p:spTree>{group()}<p:sp><p:nvSpPr><p:cNvPr id="2" name="Notes du présentateur"/><p:cNvSpPr txBox="1"/><p:nvPr><p:ph type="body" idx="1"/></p:nvPr></p:nvSpPr><p:spPr><a:xfrm><a:off x="685800" y="685800"/><a:ext cx="5486400" cy="7315200"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr><p:txBody><a:bodyPr/><a:lstStyle/>{note_paragraphs}</p:txBody></p:sp></p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:notes>'
-    parts[f'ppt/notesSlides/_rels/notesSlide{i}.xml.rels']=relationships([('rIdSlide','slide',f'../slides/slide{i}.xml'),('rIdNotesMaster','notesMaster','../notesMasters/notesMaster1.xml')])
-content='<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/>'
-for name in parts:
-    if not name.endswith('.xml'): continue
-    if name=='ppt/presentation.xml': suffix='presentation.main'
-    elif '/slideMasters/' in name: suffix='slideMaster'
-    elif '/slideLayouts/' in name: suffix='slideLayout'
-    elif '/notesMasters/' in name: suffix='notesMaster'
-    elif '/notesSlides/' in name: suffix='notesSlide'
-    elif '/slides/' in name: suffix='slide'
-    elif '/theme/' in name:
-        content+=f'<Override PartName="/{name}" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>'; continue
-    else: continue
-    content+=f'<Override PartName="/{name}" ContentType="application/vnd.openxmlformats-officedocument.presentationml.{suffix}+xml"/>'
-parts['[Content_Types].xml']=content+'</Types>'
-# Validate XML and every package relationship before writing the presentation.
-for name,xml in parts.items(): ET.fromstring(xml)
-all_paths=set(parts)|{'ppt/media/'+name for name in media}
-for name,xml in parts.items():
-    if not name.endswith('.rels'): continue
-    base='' if name=='_rels/.rels' else name.split('/_rels/')[0]
-    for rel in ET.fromstring(xml):
-        target=posixpath.normpath(posixpath.join(base,rel.attrib['Target']))
-        assert target in all_paths,(name,target)
-with ZipFile(OUTPUT,'w',ZIP_DEFLATED) as z:
-    for name,xml in parts.items(): z.writestr(name,xml.encode('utf-8'))
-    for name,data in media.items(): z.writestr('ppt/media/'+name,data)
-with ZipFile(OUTPUT) as z: assert z.testzip() is None
-# A companion script can be printed or used to rehearse without presenter mode.
-notes=['# Guide de soutenance — Groupe 1','',f'{len(slides)} diapositives · durée indicative : {sum(s.duration for s in slides)//60} min {sum(s.duration for s in slides)%60} s.','', 'Compléter les membres du groupe sur la première diapositive avant la présentation.','']
+namespaces = {
+    'p': 'http://schemas.openxmlformats.org/presentationml/2006/main',
+    'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
+    'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+}
+
+def geometry(element):
+    transform = element.find('p:spPr/a:xfrm', namespaces)
+    offset = transform.find('a:off', namespaces)
+    extent = transform.find('a:ext', namespaces)
+    return transform, tuple(int(v) for v in [offset.get('x'), offset.get('y'), extent.get('cx'), extent.get('cy')])
+
+
+def rgb(value):
+    return RGBColor.from_string(value)
+
+
+def source_shape(source):
+    return ET.fromstring('<root '+NS+'>'+source+'</root>')[0]
+
+
+presentation = Presentation()
+presentation.slide_width = 12192000
+presentation.slide_height = 6858000
+# The explicit dimensions define 16:9 without requiring a size preset.
+presentation._element.sldSz.attrib.pop('type', None)
+presentation.core_properties.title = 'Groupe 1 - Gestion des etudiants'
+presentation.core_properties.subject = 'Soutenance : conception et realisation de Campus'
+presentation.core_properties.author = 'Groupe 1'
+presentation.core_properties.keywords = 'Laravel, React, MUI, MCD, MLD, scolarite'
+
+for source_slide in slides:
+    slide = presentation.slides.add_slide(presentation.slide_layouts[6])
+    for description in source_slide.shapes:
+        element = source_shape(description)
+        tag = element.tag.rsplit('}', 1)[-1]
+        transform, (left, top, width, height) = geometry(element)
+        if tag == 'pic':
+            name = element.find('p:nvPicPr/p:cNvPr', namespaces).get('name')
+            picture = slide.shapes.add_picture(str(DOCS/'diagrammes'/(name+'.png')), left, top, width, height)
+            picture.name = name
+            picture._element.nvPicPr.cNvPr.set('descr', source_slide.title)
+        elif tag == 'cxnSp':
+            x1, y1, x2, y2 = left, top, left+width, top+height
+            if transform.get('flipH') == '1': x1, x2 = x2, x1
+            if transform.get('flipV') == '1': y1, y2 = y2, y1
+            connector = slide.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, x1, y1, x2, y2)
+            line = element.find('p:spPr/a:ln', namespaces)
+            color = line.find('a:solidFill/a:srgbClr', namespaces)
+            if color is not None: connector.line.color.rgb = rgb(color.get('val'))
+            connector.line.width = int(line.get('w', '12700'))
+            if line.find('a:tailEnd', namespaces) is not None:
+                arrow = OxmlElement('a:tailEnd')
+                arrow.set('type', 'triangle')
+                connector._element.spPr.get_or_add_ln().append(arrow)
+        elif tag == 'sp':
+            body = element.find('p:txBody', namespaces)
+            if body is not None:
+                shape = slide.shapes.add_textbox(left, top, width, height)
+                frame = shape.text_frame
+                frame.clear()
+                frame.word_wrap = True
+                frame.auto_size = MSO_AUTO_SIZE.NONE
+                frame.vertical_anchor = MSO_ANCHOR.TOP
+                frame.margin_left = frame.margin_right = frame.margin_top = frame.margin_bottom = 0
+                for index, paragraph_xml in enumerate(body.findall('a:p', namespaces)):
+                    paragraph = frame.paragraphs[0] if index == 0 else frame.add_paragraph()
+                    props = paragraph_xml.find('a:pPr', namespaces)
+                    align = props.get('algn', 'l') if props is not None else 'l'
+                    paragraph.alignment = {'l': PP_ALIGN.LEFT, 'ctr': PP_ALIGN.CENTER, 'r': PP_ALIGN.RIGHT}[align]
+                    paragraph.line_spacing = 1.1
+                    paragraph.space_after = Pt(5)
+                    for run_xml in paragraph_xml.findall('a:r', namespaces):
+                        item = paragraph.add_run()
+                        item.text = run_xml.find('a:t', namespaces).text or ''
+                        formatting = run_xml.find('a:rPr', namespaces)
+                        item.font.name = 'Arial'
+                        item.font.size = Pt(int(formatting.get('sz'))/100)
+                        item.font.bold = formatting.get('b') == '1'
+                        color = formatting.find('a:solidFill/a:srgbClr', namespaces)
+                        if color is not None: item.font.color.rgb = rgb(color.get('val'))
+            else:
+                shape = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, left, top, width, height)
+                fill = element.find('p:spPr/a:solidFill/a:srgbClr', namespaces)
+                shape.fill.solid()
+                shape.fill.fore_color.rgb = rgb(fill.get('val'))
+                border = element.find('p:spPr/a:ln/a:solidFill/a:srgbClr', namespaces)
+                if border is None:
+                    shape.line.fill.background()
+                else:
+                    shape.line.color.rgb = rgb(border.get('val'))
+                    shape.line.width = Pt(.75)
+        else:
+            raise ValueError('Unsupported shape: '+tag)
+    slide.notes_slide.notes_text_frame.text = source_slide.title+'\n\n'+source_slide.notes+'\n\nSources : README.md, migrations et code du projet.'
+
+# Preserve the previous file locally for diagnosis, outside the deliverables.
+backup = ROOT/'.tools'/'repair'/'presentation_previous.pptx'
+if OUTPUT.exists() and not backup.exists():
+    backup.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(OUTPUT, backup)
+corrected = OUTPUT.with_stem(OUTPUT.stem+'_CORRIGE')
+presentation.save(corrected)
+# Reopen the output using the presentation library and inspect all content.
+reopened = Presentation(corrected)
+assert len(reopened.slides) == 16
+assert sum(1 for slide in reopened.slides for shape in slide.shapes if shape.shape_type == 13) == 3
+for expected, actual in zip(slides, reopened.slides):
+    assert len(actual.shapes) == len(expected.shapes)
+    assert expected.notes in actual.notes_slide.notes_text_frame.text
+    for shape in actual.shapes:
+        if shape.has_text_frame:
+            assert shape.text_frame is not None
+with ZipFile(corrected) as archive:
+    assert archive.testzip() is None
+    for name in archive.namelist():
+        if name.endswith('.xml') or name.endswith('.rels'): ET.fromstring(archive.read(name))
+shutil.copy2(corrected, OUTPUT)
+notes=['# Guide de soutenance ? Groupe 1','',f'{len(slides)} diapositives ? dur?e indicative : {sum(s.duration for s in slides)//60} min {sum(s.duration for s in slides)%60} s.','', 'Compl?ter les membres du groupe sur la premi?re diapositive avant la pr?sentation.','']
 for s in slides: notes += [f'## {s.index:02}. {s.title}', '', s.notes, '']
 (DOCS/'Guide_Soutenance_Groupe_1.md').write_text('\n'.join(notes),encoding='utf-8')
-print(f'Created {OUTPUT.name}: {len(slides)} slides, {len(slides)} speaker notes, {len(media)} diagrams, {OUTPUT.stat().st_size:,} bytes.')
-print('XML, internal relationships and ZIP integrity verified.')
+print(f'Rebuilt {corrected.name}: {len(reopened.slides)} slides, 16 notes, 3 diagrams.')
+print('Saved with python-pptx, reopened and inspected successfully; original link updated.')

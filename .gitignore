@@ -5,3 +5,4 @@ dist/
 *.log
 .phpunit.result.cache
 backend/database/*.sqlite*
+.tools/

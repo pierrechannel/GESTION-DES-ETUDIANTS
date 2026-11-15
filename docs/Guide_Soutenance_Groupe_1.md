@@ -1,8 +1,8 @@
-# Guide de soutenance — Groupe 1
+# Guide de soutenance ? Groupe 1
 
-16 diapositives · durée indicative : 12 min 30 s.
+16 diapositives ? dur?e indicative : 12 min 30 s.
 
-Compléter les membres du groupe sur la première diapositive avant la présentation.
+Compl?ter les membres du groupe sur la premi?re diapositive avant la pr?sentation.
 
 ## 01. Système de gestion des étudiants
 
