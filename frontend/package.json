@@ -1,0 +1,9 @@
+{
+  "name": "campus-groupe-1",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": { "dev": "vite --host 127.0.0.1", "build": "vite build", "preview": "vite preview --host 127.0.0.1" },
+  "dependencies": { "react": "^19.0.0", "react-dom": "^19.0.0", "@mui/material": "^7.0.0", "@mui/icons-material": "^7.0.0", "@emotion/react": "^11.14.0", "@emotion/styled": "^11.14.0" },
+  "devDependencies": { "vite": "^6.0.0" }
+}
