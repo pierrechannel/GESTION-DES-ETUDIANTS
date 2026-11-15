@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="850" viewBox="0 0 1500 850">
+<rect width="100%" height="100%" fill="white"/>
+<polyline points="535,130 415,130" fill="none" stroke="#215749" stroke-width="2"/>
+<polygon points="415,130 428.0,135.85 428.0,124.15" fill="#215749" stroke="#215749" stroke-width="2"/>
+<polyline points="1065,130 965,130" fill="none" stroke="#215749" stroke-width="2"/>
+<polygon points="965,130 978.0,135.85 978.0,124.15" fill="#215749" stroke="#215749" stroke-width="2"/>
+<polyline points="750,470 750,285" fill="none" stroke="#215749" stroke-width="2"/>
+<polygon points="750,285 744.15,298.0 755.85,298.0" fill="#215749" stroke="#215749" stroke-width="2"/>
+<polyline points="1065,650 965,650" fill="none" stroke="#215749" stroke-width="2"/>
+<polygon points="965,650 978.0,655.85 978.0,644.15" fill="#215749" stroke="#215749" stroke-width="2"/>
+<polyline points="1265,470 1265,325" fill="none" stroke="#215749" stroke-width="2"/>
+<polygon points="1265,325 1259.15,338.0 1270.85,338.0" fill="#215749" stroke="#215749" stroke-width="2"/>
+<rect x="35" y="60" width="380" height="210" fill="#f7faf8" stroke="#cad7cf" stroke-width="2"/>
+<rect x="35" y="60" width="380" height="48" fill="#215749" stroke="#215749" stroke-width="2"/>
+<text x="225.0" y="93.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="25" fill="#ffffff" font-weight="bold">programs</text>
+<text x="50" y="139.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">PK id</text>
+<text x="50" y="168.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">name</text>
+<text x="50" y="197.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">UQ code</text>
+<text x="50" y="226.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">description [NULL]</text>
+<rect x="535" y="60" width="430" height="225" fill="#f7faf8" stroke="#cad7cf" stroke-width="2"/>
+<rect x="535" y="60" width="430" height="48" fill="#215749" stroke="#215749" stroke-width="2"/>
+<text x="750.0" y="93.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="25" fill="#ffffff" font-weight="bold">school_classes</text>
+<text x="550" y="139.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">PK id</text>
+<text x="550" y="168.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">FK program_id → programs.id</text>
+<text x="550" y="197.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">name</text>
+<text x="550" y="226.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">academic_year</text>
+<rect x="1065" y="60" width="400" height="265" fill="#f7faf8" stroke="#cad7cf" stroke-width="2"/>
+<rect x="1065" y="60" width="400" height="48" fill="#215749" stroke="#215749" stroke-width="2"/>
+<text x="1265.0" y="93.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="25" fill="#ffffff" font-weight="bold">subjects</text>
+<text x="1080" y="139.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">PK id</text>
+<text x="1080" y="168.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">FK school_class_id</text>
+<text x="1080" y="197.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">name, UQ code</text>
+<text x="1080" y="226.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">coefficient</text>
+<rect x="35" y="470" width="380" height="240" fill="#f7faf8" stroke="#cad7cf" stroke-width="2"/>
+<rect x="35" y="470" width="380" height="48" fill="#215749" stroke="#215749" stroke-width="2"/>
+<text x="225.0" y="503.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="25" fill="#ffffff" font-weight="bold">users</text>
+<text x="50" y="549.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">PK id</text>
+<text x="50" y="578.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">name</text>
+<text x="50" y="607.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">UQ email</text>
+<text x="50" y="636.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">password (haché)</text>
+<text x="50" y="665.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">role</text>
+<rect x="535" y="470" width="430" height="300" fill="#f7faf8" stroke="#cad7cf" stroke-width="2"/>
+<rect x="535" y="470" width="430" height="48" fill="#215749" stroke="#215749" stroke-width="2"/>
+<text x="750.0" y="503.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="25" fill="#ffffff" font-weight="bold">students</text>
+<text x="550" y="549.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">PK id</text>
+<text x="550" y="578.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">FK school_class_id</text>
+<text x="550" y="607.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">UQ registration_number</text>
+<text x="550" y="636.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">first_name, last_name</text>
+<text x="550" y="665.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">UQ email [NULL], phone [NULL]</text>
+<text x="550" y="694.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">birth_date [NULL], status</text>
+<rect x="1065" y="470" width="400" height="270" fill="#f7faf8" stroke="#cad7cf" stroke-width="2"/>
+<rect x="1065" y="470" width="400" height="48" fill="#215749" stroke="#215749" stroke-width="2"/>
+<text x="1265.0" y="503.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="25" fill="#ffffff" font-weight="bold">grades</text>
+<text x="1080" y="549.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">PK id</text>
+<text x="1080" y="578.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">FK student_id → students.id</text>
+<text x="1080" y="607.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">FK subject_id → subjects.id</text>
+<text x="1080" y="636.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">assessment</text>
+<text x="1080" y="665.8" text-anchor="start" font-family="Arial, sans-serif" font-size="22" fill="#263831" font-weight="normal">score, weight</text>
+<text x="35" y="383.3" text-anchor="start" font-family="Arial, sans-serif" font-size="21" fill="#263831" font-weight="normal">PK : clé primaire · FK : clé étrangère</text>
+<text x="35" y="408.5" text-anchor="start" font-family="Arial, sans-serif" font-size="21" fill="#263831" font-weight="normal">UQ : unicité · [NULL] : valeur facultative</text>
+<text x="35" y="813.0" text-anchor="start" font-family="Arial, sans-serif" font-size="20" fill="#263831" font-weight="normal">Flèches : FK → PK. Toutes les tables métier possèdent created_at et updated_at. Contraintes composites détaillées dans le dictionnaire.</text>
+</svg>

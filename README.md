@@ -75,8 +75,18 @@ Les tests utilisent SQLite **en mémoire**, sans modifier la base de travail. Il
 - `backend/app/Http/Middleware/AdminOnly.php` : restriction des écritures.
 - `backend/app/Services/TranscriptService.php` : calcul du relevé.
 - `backend/database` : migrations et seeders.
-- `frontend/src` : interface React et styles.
+- `frontend/src/main.jsx` : point d’entrée React et application du thème MUI.
+- `frontend/src/App.jsx` : sélection de la page et protection par authentification.
+- `frontend/src/pages` : pages de connexion, tableau de bord, étudiants, filières, classes, matières et notes ; chaque page de gestion définit ses colonnes et l’affichage de ses données.
+- `frontend/src/layouts/AppLayout.jsx` : navigation latérale, en-tête et structure commune des pages.
+- `frontend/src/components` : graphiques, tableau CRUD partagé, formulaires, confirmation de suppression, relevé imprimable et logo.
+- `frontend/src/hooks/useAuth.js` : restauration de session, profil et déconnexion.
+- `frontend/src/services` : client HTTP, gestion du jeton et récupération des étudiants pour l’export.
+- `frontend/src/config` : rubriques de navigation et définition des champs des formulaires.
+- `frontend/src/utils` : formatage des valeurs et export CSV.
+- `frontend/src/theme.js` et `style.css` : thème MUI et styles communs.
 - [Conception : MCD/MLD et cas d’utilisation](docs/conception.md).
+- [Document Word : MCD, MLD et diagramme UML des cas d’utilisation](docs/Conception_Groupe_1_MCD_MLD_Cas_Utilisation.docx), avec dictionnaire des données, cardinalités et règles de gestion. Les diagrammes PNG/SVG sont dans `docs/diagrammes`.
 - [Documentation des routes et règles](docs/api.md).
 - [Collection Postman importable](docs/campus.postman_collection.json).
 
