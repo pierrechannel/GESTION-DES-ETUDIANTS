@@ -1,129 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { ThemeProvider, createTheme, CssBaseline, Button, TextField, MenuItem, Alert, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Chip, Avatar, Table, TableHead, TableBody, TableRow, TableCell, TableContainer, TablePagination, LinearProgress, Tooltip } from '@mui/material';
-import SchoolOutlined from '@mui/icons-material/SchoolOutlined';
-import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
-import PeopleOutline from '@mui/icons-material/PeopleOutline';
-import AccountTreeOutlined from '@mui/icons-material/AccountTreeOutlined';
-import ClassOutlined from '@mui/icons-material/ClassOutlined';
-import MenuBookOutlined from '@mui/icons-material/MenuBookOutlined';
-import GradingOutlined from '@mui/icons-material/GradingOutlined';
-import Add from '@mui/icons-material/Add';
-import Search from '@mui/icons-material/Search';
-import FileDownloadOutlined from '@mui/icons-material/FileDownloadOutlined';
-import EditOutlined from '@mui/icons-material/EditOutlined';
-import DeleteOutline from '@mui/icons-material/DeleteOutline';
-import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined';
-import Logout from '@mui/icons-material/Logout';
-import Close from '@mui/icons-material/Close';
-import PrintOutlined from '@mui/icons-material/PrintOutlined';
-import ArrowForward from '@mui/icons-material/ArrowForward';
-import MenuIcon from '@mui/icons-material/Menu';
+import { ThemeProvider, CssBaseline } from '@mui/material';
+import App from './App';
+import theme from './theme';
 import './style.css';
-import DashboardCharts from './components/DashboardCharts';
 
-const theme = createTheme({ palette: { primary: { main: '#215749' }, background: { default: '#f6f7f9' } }, typography: { fontFamily: 'Inter, Segoe UI, sans-serif', button: { textTransform: 'none', fontWeight: 600 } }, shape: { borderRadius: 10 }, components: { MuiButton: { defaultProps: { disableElevation: true } }, MuiTableCell: { styleOverrides: { head: { background: '#f8faf9', color: '#6b7780', fontWeight: 600 }, root: { borderColor: '#edf0f2', padding: '16px' } } } } });
-let token = sessionStorage.getItem('campus_token');
-async function api(path, options = {}) {
-  const response = await fetch(`/api/v1/${path}`, { ...options, headers: { Accept: 'application/json', ...(options.body ? { 'Content-Type': 'application/json' } : {}), ...(token ? { Authorization: `Bearer ${token}` } : {}), ...options.headers } });
-  if (response.status === 204) return null;
-  const data = await response.json().catch(() => ({ message: 'Le serveur ne répond pas correctement. Vérifiez que Laravel est démarré.' }));
-  if (!response.ok) { if (response.status === 401 && token) window.dispatchEvent(new Event('campus-expired')); throw Object.assign(new Error(data.message || 'Une erreur est survenue.'), { errors: data.errors, status: response.status }); }
-  return data;
-}
-const sections = {
-  dashboard: { label: 'Vue d’ensemble', icon: DashboardOutlined },
-  students: { label: 'Étudiants', singular: 'un étudiant', icon: PeopleOutline, description: 'Tous les parcours commencent par un étudiant.' },
-  programs: { label: 'Filières', singular: 'une filière', icon: AccountTreeOutlined, description: 'Organisez les parcours de formation de votre établissement.' },
-  classes: { label: 'Classes', singular: 'une classe', icon: ClassOutlined, description: 'Retrouvez vos classes et leurs effectifs.' },
-  subjects: { label: 'Matières', singular: 'une matière', icon: MenuBookOutlined, description: 'Structurez les enseignements et leurs coefficients.' },
-  grades: { label: 'Notes', singular: 'une note', icon: GradingOutlined, description: 'Suivez les résultats et la progression des étudiants.' },
-};
-const studentName = s => `${s.first_name} ${s.last_name}`;
-const className = c => c ? `${c.name} · ${c.program?.code || ''} · ${c.academic_year}` : '—';
-const number = n => n == null ? '—' : Number(n).toLocaleString('fr-FR', { maximumFractionDigits: 2 });
-const fields = {
-  students: [['first_name', 'Prénom'], ['last_name', 'Nom'], ['registration_number', 'Matricule'], ['school_class_id', 'Classe', 'classes'], ['email', 'Adresse e-mail', 'email', true], ['phone', 'Téléphone', 'text', true], ['birth_date', 'Date de naissance', 'date', true], ['status', 'Statut', 'status']],
-  programs: [['name', 'Nom de la filière'], ['code', 'Code'], ['description', 'Description', 'text', true]],
-  classes: [['name', 'Nom de la classe'], ['program_id', 'Filière', 'programs'], ['academic_year', 'Année académique (2026-2027)']],
-  subjects: [['name', 'Nom de la matière'], ['code', 'Code'], ['school_class_id', 'Classe', 'classes'], ['coefficient', 'Coefficient', 'number']],
-  grades: [['student_id', 'Étudiant', 'students'], ['subject_id', 'Matière', 'subjects'], ['assessment', 'Évaluation'], ['score', 'Note sur 20', 'number'], ['weight', 'Poids de l’évaluation', 'number']],
-};
-function Login({ onLogin }) {
-  const [register, setRegister] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState('');
-  async function submit(e) {
-    e.preventDefault(); setBusy(true); setError('');
-    try { const data = await api(register ? 'register' : 'login', { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(e.currentTarget))) }); token = data.token; sessionStorage.setItem('campus_token', token); onLogin(data.user); }
-    catch (e) { setError(Object.values(e.errors || {}).flat().join(' ') || e.message); } finally { setBusy(false); }
-  }
-  return <div className="login-layout"><div className="login-story"><Brand/><div><span className="eyebrow">VOTRE CAMPUS, CONNECTÉ</span><h1>Accompagner<br/>chaque parcours.</h1><p>Étudiants, formations et résultats.<br/>Un espace pour faire avancer votre établissement.</p><div className="story-art"><SchoolOutlined sx={{ fontSize: 140 }}/><span>Apprendre. Progresser. Réussir.</span></div></div><small>Projet de programmation côté serveur · Groupe 1</small></div><main className="login-form"><form onSubmit={submit}><span className="eyebrow">ESPACE SCOLARITÉ</span><h2>{register ? 'Créer un compte' : 'Bienvenue sur Campus'}</h2><p className="muted">{register ? 'Votre compte permet de consulter les données scolaires.' : 'Connectez-vous pour retrouver votre établissement.'}</p>{error && <Alert severity="error">{error}</Alert>}{register && <TextField required fullWidth name="name" label="Nom complet" autoComplete="name"/>}<TextField required fullWidth type="email" name="email" label="Adresse e-mail" autoComplete="username"/><TextField required fullWidth type="password" name="password" label="Mot de passe" inputProps={{ minLength: 8 }} autoComplete={register ? 'new-password' : 'current-password'}/>{register && <TextField required fullWidth type="password" name="password_confirmation" label="Confirmer le mot de passe" autoComplete="new-password"/>}<Button disabled={busy} fullWidth variant="contained" size="large" type="submit" endIcon={busy ? <CircularProgress size={18}/> : <ArrowForward/>}>{register ? 'Créer mon compte' : 'Se connecter'}</Button><Button fullWidth onClick={() => { setRegister(!register); setError(''); }}>{register ? 'J’ai déjà un compte' : 'Créer un compte de consultation'}</Button></form><small className="muted">Campus · Gestion des étudiants</small></main></div>;
-}
-function Brand() { return <div className="brand"><div className="brand-icon"><SchoolOutlined/></div><div>campus<span>GESTION ACADÉMIQUE</span></div></div>; }
-function App() {
-  const [user, setUser] = useState(null), [initial, setInitial] = useState(true), [page, setPage] = useState('dashboard'), [mobile, setMobile] = useState(false);
-  const [notice, setNotice] = useState('');
-  useEffect(() => { if (token) api('me').then(setUser).catch(() => { token = null; sessionStorage.removeItem('campus_token'); }).finally(() => setInitial(false)); else setInitial(false);
-    const expire = () => { token = null; sessionStorage.removeItem('campus_token'); setUser(null); };
-    window.addEventListener('campus-expired', expire); return () => window.removeEventListener('campus-expired', expire);
-  }, []);
-  async function logout() { try { await api('logout', { method: 'POST' }); token = null; sessionStorage.removeItem('campus_token'); setUser(null); } catch (e) { setNotice(e.message); } }
-  if (initial) return <div className="loading"><CircularProgress/></div>;
-  if (!user) return <Login onLogin={setUser}/>;
-  return <div className="app-shell"><aside className={mobile ? 'sidebar visible' : 'sidebar'}><Brand/><span className="nav-heading">ESPACE DE GESTION</span><nav>{Object.entries(sections).map(([key, { label, icon: Icon }]) => <button key={key} className={page === key ? 'nav-item selected' : 'nav-item'} onClick={() => { setPage(key); setMobile(false); }}><Icon fontSize="small"/>{label}{page === key && <span className="nav-dot"/>}</button>)}</nav><div className="sidebar-bottom"><div className="school-badge"><SchoolOutlined/><div>Votre établissement<span>Année académique 2026–2027</span></div></div><button className="nav-item" onClick={logout}><Logout fontSize="small"/>Se déconnecter</button></div></aside>{mobile && <div className="scrim" onClick={() => setMobile(false)}/>}<div className="workspace"><header className="topbar"><div className="breadcrumb"><IconButton className="mobile-toggle" aria-label="Afficher le menu" onClick={() => setMobile(true)}><MenuIcon/></IconButton>Scolarité <span>/</span> <strong>{sections[page].label}</strong></div><div className="profile"><div><strong>{user.name}</strong><span>{user.role === 'admin' ? 'Administrateur' : 'Consultation'}</span></div><Avatar sx={{ bgcolor: '#e9f1ed', color: '#215749', width: 38, height: 38 }}>{user.name[0]}</Avatar></div></header><main className="main-content">{notice && <Alert severity="error" onClose={() => setNotice('')}>{notice}</Alert>}{page === 'dashboard' ? <Dashboard navigate={setPage}/> : <EntityPage key={page} entity={page} admin={user.role === 'admin'}/>}<footer>Campus <span>Un regard clair sur chaque parcours.</span><small>Groupe 1 · Laravel + React</small></footer></main></div></div>;
-}
-function Dashboard({ navigate }) {
-  const [data, setData] = useState(null), [error, setError] = useState('');
-  useEffect(() => { api('dashboard').then(setData).catch(e => setError(e.message)); }, []);
-  return <><div className="page-heading"><div><span className="eyebrow">LE CAMPUS EN UN COUP D’ŒIL</span><h1>Vue d’ensemble</h1><p className="muted">Les repères essentiels de votre vie académique.</p></div><Chip label="Année 2026–2027" variant="outlined"/></div>{error && <Alert severity="error">{error}</Alert>}{!data && !error && <LinearProgress/>}{data && <><div className="welcome-banner"><div><span className="eyebrow">CHAQUE ÉTUDIANT COMPTE</span><h2>Des parcours à accompagner.<br/>Des réussites à construire.</h2><p>Retrouvez vos étudiants et suivez leur progression, simplement.</p><Button variant="contained" onClick={() => navigate('students')} endIcon={<ArrowForward/>}>Consulter les étudiants</Button></div><SchoolOutlined className="banner-icon"/></div><div className="stats-grid">{[['Étudiants', data.students, `${data.active_students} inscriptions actives`, PeopleOutline], ['Filières', data.programs, 'Parcours de formation', AccountTreeOutlined], ['Classes', data.classes, 'Groupes d’apprentissage', ClassOutlined], ['Matières', data.subjects, 'Enseignements proposés', MenuBookOutlined]].map(([label, value, hint, Icon]) => <div className="stat-card" key={label}><div className="stat-label">{label}<Icon/></div><strong>{value}</strong><span>{hint}</span></div>)}</div><DashboardCharts data={data}/><div className="dashboard-grid"><section className="panel"><div className="panel-heading"><div><h3>Effectifs par classe</h3><p className="muted">Répartition des étudiants inscrits</p></div><Chip size="small" label={`${data.classes} classes`}/></div><div className="class-bars">{data.by_class.length ? data.by_class.map(c => <div key={c.id}><div className="bar-label"><span>{c.program.code} · {c.name}</span><strong>{c.students_count} étudiants</strong></div><LinearProgress variant="determinate" value={c.students_count / Math.max(1, ...data.by_class.map(c => c.students_count)) * 100} sx={{ height: 7, borderRadius: 4, bgcolor: '#eff3f0' }}/></div>) : <p className="muted">Créez une classe pour commencer.</p>}</div></section><section className="panel"><div className="panel-heading"><div><h3>Dernières inscriptions</h3><p className="muted">Les nouveaux visages du campus</p></div></div>{data.recent_students.map(s => <div className="recent-student" key={s.id}><Avatar sx={{ bgcolor: '#edf2ef', color: '#507568' }}>{s.first_name[0]}{s.last_name[0]}</Avatar><div><strong>{studentName(s)}</strong><span>{s.registration_number}</span></div><Chip label={s.school_class.program.code} size="small" variant="outlined"/></div>)}{!data.recent_students.length && <p className="empty">Aucun étudiant inscrit.</p>}<Button onClick={() => navigate('students')} endIcon={<ArrowForward/>} sx={{ margin: 2 }}>Voir tous les étudiants</Button></section></div></>}</>;
-}
-function EntityPage({ entity, admin }) {
-  const [options, setOptions] = useState({ programs: [], classes: [], subjects: [], students: [] });
-  const [list, setList] = useState({ data: [], total: 0 }), [loading, setLoading] = useState(true), [error, setError] = useState('');
-  const [search, setSearch] = useState(''), [debounced, setDebounced] = useState(''), [filter, setFilter] = useState(''), [index, setIndex] = useState(0), [size, setSize] = useState(10), [revision, refresh] = useState(0);
-  const [editing, setEditing] = useState(null), [deleting, setDeleting] = useState(null), [transcript, setTranscript] = useState(null), [busy, setBusy] = useState(false), [success, setSuccess] = useState('');
-  const meta = sections[entity];
-  useEffect(() => { const timer = setTimeout(() => { setDebounced(search); setIndex(0); }, 300); return () => clearTimeout(timer); }, [search]);
-  useEffect(() => { api('options').then(setOptions).catch(e => setError(e.message)); }, [revision]);
-  const filterKey = entity === 'students' || entity === 'classes' ? 'program_id' : entity === 'subjects' ? 'class_id' : entity === 'grades' ? 'subject_id' : '';
-  const filterItems = entity === 'students' || entity === 'classes' ? options.programs : entity === 'subjects' ? options.classes : options.subjects;
-  const query = new URLSearchParams({ search: debounced, page: index + 1, per_page: size, ...(filterKey && filter ? { [filterKey]: filter } : {}) }).toString();
-  useEffect(() => { const controller = new AbortController(); setLoading(true); setError(''); api(`${entity}?${query}`, { signal: controller.signal }).then(setList).catch(e => { if (e.name !== 'AbortError') setError(e.message); }).finally(() => { if (!controller.signal.aborted) setLoading(false); }); return () => controller.abort(); }, [entity, query, revision]);
-  async function remove() { setBusy(true); try { await api(`${entity}/${deleting.id}`, { method: 'DELETE' }); setDeleting(null); setIndex(0); refresh(v => v + 1); setSuccess('Suppression effectuée.'); } catch (e) { setError(e.message); setDeleting(null); } finally { setBusy(false); } }
-  async function view(s) { setBusy(true); try { setTranscript(await api(`students/${s.id}/transcript`)); } catch (e) { setError(e.message); } finally { setBusy(false); } }
-  async function exportCsv() {
-    setBusy(true); try {
-      let rows = [], p = 1, result;
-      do { const params = new URLSearchParams({ search: debounced, per_page: 100, page: p, ...(filter ? { program_id: filter } : {}) }); result = await api(`students?${params}`); rows.push(...result.data); p++; } while (p <= result.last_page);
-      const safe = value => { const s = String(value ?? ''); return `"${(/^[=+@\-\t\r]/.test(s) ? "'" : '') + s.replaceAll('"', '""')}"`; };
-      const csv = [['Matricule', 'Prénom', 'Nom', 'Filière', 'Classe', 'Email', 'Statut'], ...rows.map(s => [s.registration_number, s.first_name, s.last_name, s.school_class.program.name, s.school_class.name, s.email, s.status === 'active' ? 'Actif' : 'Inactif'])].map(row => row.map(safe).join(';')).join('\r\n');
-      const url = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })); const a = document.createElement('a'); a.href = url; a.download = 'etudiants.csv'; a.click(); URL.revokeObjectURL(url);
-    } catch (e) { setError(e.message); } finally { setBusy(false); }
-  }
-  const columns = entity === 'students' ? ['Étudiant', 'Matricule', 'Filière / Classe', 'Statut'] : entity === 'programs' ? ['Filière', 'Code', 'Description', 'Classes'] : entity === 'classes' ? ['Classe', 'Filière', 'Année académique', 'Effectif'] : entity === 'subjects' ? ['Matière', 'Code', 'Classe', 'Coefficient'] : ['Étudiant', 'Matière', 'Évaluation', 'Note / 20', 'Poids'];
-  function cells(row) {
-    if (entity === 'students') return [<div className="person-cell"><Avatar sx={{ width: 36, height: 36, bgcolor: '#edf2ef', color: '#54796b', fontSize: 13 }}>{row.first_name[0]}{row.last_name[0]}</Avatar><div><strong>{studentName(row)}</strong><span>{row.email || 'E-mail non renseigné'}</span></div></div>, <span className="mono">{row.registration_number}</span>, <div className="two-lines"><strong>{row.school_class.program.name}</strong><span>{row.school_class.name}</span></div>, <Chip size="small" label={row.status === 'active' ? 'Actif' : 'Inactif'} sx={{ bgcolor: row.status === 'active' ? '#edf5ef' : '#f1f2f3', color: row.status === 'active' ? '#2f7a4d' : '#6b7280' }}/>];
-    if (entity === 'programs') return [<strong>{row.name}</strong>, <Chip size="small" variant="outlined" label={row.code}/>, row.description || '—', row.classes_count];
-    if (entity === 'classes') return [<strong>{row.name}</strong>, row.program.name, row.academic_year, `${row.students_count} étudiants`];
-    if (entity === 'subjects') return [<strong>{row.name}</strong>, row.code, className(row.school_class), number(row.coefficient)];
-    return [<div className="two-lines"><strong>{studentName(row.student)}</strong><span>{row.student.registration_number}</span></div>, row.subject.name, row.assessment, <Chip size="small" label={number(row.score)} color={Number(row.score) >= 10 ? 'success' : 'warning'} variant="outlined"/>, number(row.weight)];
-  }
-  return <><div className="page-heading"><div><span className="eyebrow">SCOLARITÉ / {meta.label.toUpperCase()}</span><h1>{meta.label}<span className="title-count">{list.total}</span></h1><p className="muted">{meta.description}</p></div><div className="heading-actions">{entity === 'students' && <Button variant="outlined" startIcon={<FileDownloadOutlined/>} disabled={busy || loading} onClick={exportCsv}>Exporter CSV</Button>}{admin && <Button variant="contained" startIcon={<Add/>} onClick={() => setEditing({})}>Ajouter {meta.singular}</Button>}</div></div>{error && <Alert severity="error" onClose={() => setError('')}>{error}</Alert>}{success && <Alert severity="success" onClose={() => setSuccess('')}>{success}</Alert>}<section className="panel entity-panel"><div className="list-toolbar"><div><h3>{entity === 'students' ? 'Répertoire des étudiants' : `Liste des ${meta.label.toLowerCase()}`}</h3><span className="muted">{list.total} élément{list.total > 1 ? 's' : ''} au total</span></div><div className="filters"><TextField size="small" placeholder={entity === 'students' ? 'Nom, prénom ou matricule…' : 'Rechercher…'} value={search} onChange={e => setSearch(e.target.value)} slotProps={{ input: { startAdornment: <Search sx={{ color: '#8a9792', mr: 1 }}/> }, htmlInput: { 'aria-label': 'Rechercher' } }}/>{filterKey && <TextField select size="small" value={filter} onChange={e => { setFilter(e.target.value); setIndex(0); }} sx={{ minWidth: 180 }} slotProps={{ htmlInput: { 'aria-label': 'Filtrer la liste' } }}><MenuItem value="">{filterKey === 'program_id' ? 'Toutes les filières' : filterKey === 'class_id' ? 'Toutes les classes' : 'Toutes les matières'}</MenuItem>{filterItems.map(o => <MenuItem key={o.id} value={o.id}>{filterKey === 'class_id' ? className(o) : o.name}</MenuItem>)}</TextField>}</div></div>{loading && <LinearProgress/>}<TableContainer><Table><TableHead><TableRow>{columns.map(c => <TableCell key={c}>{c}</TableCell>)}<TableCell align="right">Actions</TableCell></TableRow></TableHead><TableBody>{!loading && list.data.map(row => <TableRow hover key={row.id}>{cells(row).map((c, i) => <TableCell key={i}>{c}</TableCell>)}<TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>{entity === 'students' && <Tooltip title="Fiche et relevé de notes"><IconButton aria-label="Consulter la fiche et le relevé" disabled={busy} onClick={() => view(row)} size="small"><VisibilityOutlined fontSize="small"/></IconButton></Tooltip>}{admin && <><Tooltip title="Modifier"><IconButton aria-label="Modifier" size="small" onClick={() => setEditing(row)}><EditOutlined fontSize="small"/></IconButton></Tooltip><Tooltip title="Supprimer"><IconButton aria-label="Supprimer" size="small" onClick={() => setDeleting(row)}><DeleteOutline fontSize="small"/></IconButton></Tooltip></>}</TableCell></TableRow>)}{!loading && !list.data.length && <TableRow><TableCell colSpan={columns.length + 1}><div className="empty"><meta.icon sx={{ fontSize: 40, color: '#9ab4a8' }}/><h3>Aucun résultat</h3><p>Ajoutez un élément ou ajustez votre recherche.</p></div></TableCell></TableRow>}</TableBody></Table></TableContainer><TablePagination component="div" count={list.total} page={index} rowsPerPage={size} rowsPerPageOptions={[10, 25, 50]} onPageChange={(_, p) => setIndex(p)} onRowsPerPageChange={e => { setSize(Number(e.target.value)); setIndex(0); }} labelRowsPerPage="Lignes par page" labelDisplayedRows={({ from, to, count }) => `${from}–${to} sur ${count}`} getItemAriaLabel={type => type === 'next' ? 'Page suivante' : 'Page précédente'}/></section>{!admin && <p className="muted permission-note">Vous disposez d’un accès de consultation.</p>}{editing && <EditDialog entity={entity} record={editing} options={options} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); setIndex(0); refresh(v => v + 1); setSuccess('Enregistrement effectué.'); }}/>}<Dialog open={!!deleting} onClose={() => !busy && setDeleting(null)}><DialogTitle>Confirmer la suppression</DialogTitle><DialogContent><p>Supprimer cet élément ? Cette opération est définitive.{entity === 'students' ? ' Les notes de cet étudiant seront également supprimées.' : ''}</p></DialogContent><DialogActions><Button disabled={busy} onClick={() => setDeleting(null)}>Annuler</Button><Button disabled={busy} color="error" variant="contained" onClick={remove}>Supprimer</Button></DialogActions></Dialog>{transcript && <Transcript data={transcript} onClose={() => setTranscript(null)}/>}</>;
-}
-function EditDialog({ entity, record, options, onClose, onSaved }) {
-  const [form, setForm] = useState({ status: 'active', coefficient: 1, weight: 1, academic_year: '2026-2027', ...record }), [errors, setErrors] = useState({}), [error, setError] = useState(''), [busy, setBusy] = useState(false);
-  async function save(e) { e.preventDefault(); setBusy(true); setError(''); setErrors({});
-    try { const payload = Object.fromEntries(fields[entity].map(([key]) => [key, form[key] === '' ? null : form[key]])); await api(`${entity}${record.id ? '/' + record.id : ''}`, { method: record.id ? 'PUT' : 'POST', body: JSON.stringify(payload) }); onSaved(); }
-    catch (e) { setErrors(e.errors || {}); setError(e.errors ? 'Vérifiez les champs indiqués.' : e.message); } finally { setBusy(false); }
-  }
-  return <Dialog open fullWidth maxWidth="sm" onClose={() => !busy && onClose()}><form onSubmit={save}><DialogTitle>{record.id ? 'Modifier' : 'Ajouter'} {sections[entity].singular}</DialogTitle><DialogContent><div className="form-fields">{error && <Alert severity="error">{error}</Alert>}{fields[entity].map(([key, label, type = 'text', optional]) => {
-    let choices = options[type];
-    if (entity === 'grades' && key === 'subject_id') { const student = options.students.find(s => s.id === Number(form.student_id)); choices = options.subjects.filter(s => s.school_class_id === student?.school_class_id); }
-    const select = Boolean(choices) || type === 'status';
-    return <TextField key={key} fullWidth required={!optional} label={label} select={select} type={select ? undefined : type} value={form[key] ?? ''} error={!!errors[key]} helperText={errors[key]?.join(' ')} onChange={e => setForm({ ...form, [key]: e.target.value, ...(entity === 'grades' && key === 'student_id' ? { subject_id: '' } : {}) })} slotProps={{ inputLabel: { shrink: type === 'date' ? true : undefined }, htmlInput: type === 'number' ? { step: '0.01', min: key === 'score' ? 0 : 0.01, max: key === 'score' ? 20 : 100 } : {} }}>{select && (type === 'status' ? [<MenuItem key="active" value="active">Actif</MenuItem>, <MenuItem key="inactive" value="inactive">Inactif</MenuItem>] : choices.map(o => <MenuItem key={o.id} value={o.id}>{type === 'students' ? `${studentName(o)} · ${o.registration_number}` : type === 'classes' ? className(o) : type === 'subjects' ? `${o.name} · ${o.code}` : o.name}</MenuItem>))}</TextField>;
-  })}</div></DialogContent><DialogActions><Button disabled={busy} onClick={onClose}>Annuler</Button><Button type="submit" disabled={busy} variant="contained">{busy ? 'Enregistrement…' : 'Enregistrer'}</Button></DialogActions></form></Dialog>;
-}
-function Transcript({ data, onClose }) {
-  const s = data.student;
-  return <Dialog open fullWidth maxWidth="md" onClose={onClose} className="transcript-dialog"><DialogTitle className="no-print">Fiche étudiante et relevé<IconButton aria-label="Fermer" onClick={onClose} sx={{ float: 'right' }}><Close/></IconButton></DialogTitle><DialogContent><article className="transcript"><div className="transcript-heading"><Brand/><span>SCOLARITÉ<br/>{s.school_class.academic_year}</span></div><h1>Relevé de notes</h1><h2>{studentName(s)}</h2><p>{s.registration_number} · {s.school_class.program.name} · {s.school_class.name}</p><p className="muted">E-mail : {s.email || '—'} · Téléphone : {s.phone || '—'}<br/>Date de naissance : {s.birth_date || '—'} · Statut : {s.status === 'active' ? 'Actif' : 'Inactif'}</p><Table><TableHead><TableRow><TableCell>Matière / Évaluations</TableCell><TableCell>Coefficient</TableCell><TableCell align="right">Moyenne / 20</TableCell></TableRow></TableHead><TableBody>{data.subjects.map(row => <TableRow key={row.subject.id}><TableCell><strong>{row.subject.name}</strong><div className="muted grade-details">{row.grades.map(g => `${g.assessment} : ${number(g.score)}/20 (poids ${number(g.weight)})`).join(' · ') || 'Aucune note saisie'}</div></TableCell><TableCell>{number(row.subject.coefficient)}</TableCell><TableCell align="right">{number(row.average)}</TableCell></TableRow>)}</TableBody></Table><div className="average"><span>Moyenne générale {data.complete ? '' : '(provisoire)'}</span><strong>{number(data.general_average)} <small>/ 20</small></strong></div><p className="muted">Moyennes pondérées par le poids des évaluations, puis par les coefficients des matières. Les matières sans note sont exclues de la moyenne provisoire.</p></article></DialogContent><DialogActions className="no-print"><Button onClick={onClose}>Fermer</Button><Button variant="contained" startIcon={<PrintOutlined/>} onClick={() => window.print()}>Imprimer / Enregistrer en PDF</Button></DialogActions></Dialog>;
-}
-createRoot(document.getElementById('root')).render(<ThemeProvider theme={theme}><CssBaseline/><App/></ThemeProvider>);
+createRoot(document.getElementById('root')).render(
+  <ThemeProvider theme={theme}>
+    <CssBaseline />
+    <App />
+  </ThemeProvider>,
+);

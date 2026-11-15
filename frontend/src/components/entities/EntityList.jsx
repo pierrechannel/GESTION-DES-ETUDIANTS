@@ -1,0 +1,38 @@
+import React, { useEffect, useState } from 'react';
+import { Button, TextField, MenuItem, Alert, IconButton, Table, TableHead, TableBody, TableRow, TableCell, TableContainer, TablePagination, LinearProgress, Tooltip } from '@mui/material';
+import Add from '@mui/icons-material/Add';
+import Search from '@mui/icons-material/Search';
+import FileDownloadOutlined from '@mui/icons-material/FileDownloadOutlined';
+import EditOutlined from '@mui/icons-material/EditOutlined';
+import DeleteOutline from '@mui/icons-material/DeleteOutline';
+import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined';
+import api from '../../services/api';
+import { exportStudentsCsv } from '../../utils/exportStudentsCsv';
+import { sections } from '../../config/sections';
+import { className } from '../../utils/formatters';
+import EntityFormDialog from './EntityFormDialog';
+import ConfirmDeleteDialog from './ConfirmDeleteDialog';
+import TranscriptDialog from '../students/TranscriptDialog';
+
+export default function EntityList({ entity, admin, columns, renderCells }) {
+  const [options, setOptions] = useState({ programs: [], classes: [], subjects: [], students: [] });
+  const [list, setList] = useState({ data: [], total: 0 }), [loading, setLoading] = useState(true), [error, setError] = useState('');
+  const [search, setSearch] = useState(''), [debounced, setDebounced] = useState(''), [filter, setFilter] = useState(''), [index, setIndex] = useState(0), [size, setSize] = useState(10), [revision, refresh] = useState(0);
+  const [editing, setEditing] = useState(null), [deleting, setDeleting] = useState(null), [transcript, setTranscript] = useState(null), [busy, setBusy] = useState(false), [success, setSuccess] = useState('');
+  const meta = sections[entity];
+  useEffect(() => { const timer = setTimeout(() => { setDebounced(search); setIndex(0); }, 300); return () => clearTimeout(timer); }, [search]);
+  useEffect(() => { api('options').then(setOptions).catch(e => setError(e.message)); }, [revision]);
+  const filterKey = entity === 'students' || entity === 'classes' ? 'program_id' : entity === 'subjects' ? 'class_id' : entity === 'grades' ? 'subject_id' : '';
+  const filterItems = entity === 'students' || entity === 'classes' ? options.programs : entity === 'subjects' ? options.classes : options.subjects;
+  const query = new URLSearchParams({ search: debounced, page: index + 1, per_page: size, ...(filterKey && filter ? { [filterKey]: filter } : {}) }).toString();
+  useEffect(() => { const controller = new AbortController(); setLoading(true); setError(''); api(`${entity}?${query}`, { signal: controller.signal }).then(setList).catch(e => { if (e.name !== 'AbortError') setError(e.message); }).finally(() => { if (!controller.signal.aborted) setLoading(false); }); return () => controller.abort(); }, [entity, query, revision]);
+  async function remove() { setBusy(true); try { await api(`${entity}/${deleting.id}`, { method: 'DELETE' }); setDeleting(null); setIndex(0); refresh(v => v + 1); setSuccess('Suppression effectuée.'); } catch (e) { setError(e.message); setDeleting(null); } finally { setBusy(false); } }
+  async function view(s) { setBusy(true); try { setTranscript(await api(`students/${s.id}/transcript`)); } catch (e) { setError(e.message); } finally { setBusy(false); } }
+  async function exportCsv() {
+    setBusy(true);
+    try { await exportStudentsCsv({ search: debounced, programId: filter }); }
+    catch (e) { setError(e.message); }
+    finally { setBusy(false); }
+  }
+  return <><div className="page-heading"><div><span className="eyebrow">SCOLARITÉ / {meta.label.toUpperCase()}</span><h1>{meta.label}<span className="title-count">{list.total}</span></h1><p className="muted">{meta.description}</p></div><div className="heading-actions">{entity === 'students' && <Button variant="outlined" startIcon={<FileDownloadOutlined/>} disabled={busy || loading} onClick={exportCsv}>Exporter CSV</Button>}{admin && <Button variant="contained" startIcon={<Add/>} onClick={() => setEditing({})}>Ajouter {meta.singular}</Button>}</div></div>{error && <Alert severity="error" onClose={() => setError('')}>{error}</Alert>}{success && <Alert severity="success" onClose={() => setSuccess('')}>{success}</Alert>}<section className="panel entity-panel"><div className="list-toolbar"><div><h3>{entity === 'students' ? 'Répertoire des étudiants' : `Liste des ${meta.label.toLowerCase()}`}</h3><span className="muted">{list.total} élément{list.total > 1 ? 's' : ''} au total</span></div><div className="filters"><TextField size="small" placeholder={entity === 'students' ? 'Nom, prénom ou matricule…' : 'Rechercher…'} value={search} onChange={e => setSearch(e.target.value)} slotProps={{ input: { startAdornment: <Search sx={{ color: '#8a9792', mr: 1 }}/> }, htmlInput: { 'aria-label': 'Rechercher' } }}/>{filterKey && <TextField select size="small" value={filter} onChange={e => { setFilter(e.target.value); setIndex(0); }} sx={{ minWidth: 180 }} slotProps={{ htmlInput: { 'aria-label': 'Filtrer la liste' } }}><MenuItem value="">{filterKey === 'program_id' ? 'Toutes les filières' : filterKey === 'class_id' ? 'Toutes les classes' : 'Toutes les matières'}</MenuItem>{filterItems.map(o => <MenuItem key={o.id} value={o.id}>{filterKey === 'class_id' ? className(o) : o.name}</MenuItem>)}</TextField>}</div></div>{loading && <LinearProgress/>}<TableContainer><Table><TableHead><TableRow>{columns.map(c => <TableCell key={c}>{c}</TableCell>)}<TableCell align="right">Actions</TableCell></TableRow></TableHead><TableBody>{!loading && list.data.map(row => <TableRow hover key={row.id}>{renderCells(row).map((c, i) => <TableCell key={i}>{c}</TableCell>)}<TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>{entity === 'students' && <Tooltip title="Fiche et relevé de notes"><IconButton aria-label="Consulter la fiche et le relevé" disabled={busy} onClick={() => view(row)} size="small"><VisibilityOutlined fontSize="small"/></IconButton></Tooltip>}{admin && <><Tooltip title="Modifier"><IconButton aria-label="Modifier" size="small" onClick={() => setEditing(row)}><EditOutlined fontSize="small"/></IconButton></Tooltip><Tooltip title="Supprimer"><IconButton aria-label="Supprimer" size="small" onClick={() => setDeleting(row)}><DeleteOutline fontSize="small"/></IconButton></Tooltip></>}</TableCell></TableRow>)}{!loading && !list.data.length && <TableRow><TableCell colSpan={columns.length + 1}><div className="empty"><meta.icon sx={{ fontSize: 40, color: '#9ab4a8' }}/><h3>Aucun résultat</h3><p>Ajoutez un élément ou ajustez votre recherche.</p></div></TableCell></TableRow>}</TableBody></Table></TableContainer><TablePagination component="div" count={list.total} page={index} rowsPerPage={size} rowsPerPageOptions={[10, 25, 50]} onPageChange={(_, p) => setIndex(p)} onRowsPerPageChange={e => { setSize(Number(e.target.value)); setIndex(0); }} labelRowsPerPage="Lignes par page" labelDisplayedRows={({ from, to, count }) => `${from}–${to} sur ${count}`} getItemAriaLabel={type => type === 'next' ? 'Page suivante' : 'Page précédente'}/></section>{!admin && <p className="muted permission-note">Vous disposez d’un accès de consultation.</p>}{editing && <EntityFormDialog entity={entity} record={editing} options={options} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); setIndex(0); refresh(v => v + 1); setSuccess('Enregistrement effectué.'); }}/>}<ConfirmDeleteDialog open={!!deleting} busy={busy} entity={entity} onClose={() => setDeleting(null)} onConfirm={remove}/>{transcript && <TranscriptDialog data={transcript} onClose={() => setTranscript(null)}/>}</>;
+}
